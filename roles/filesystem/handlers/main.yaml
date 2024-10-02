@@ -1,0 +1,15 @@
+---
+- name: Reload nfs
+  ansible.builtin.systemd:
+    name: nfs-server
+    state: reloaded
+
+- name: Reload smb
+  ansible.builtin.systemd:
+    name: smb
+    state: reloaded
+
+- name: Restart firewalld
+  ansible.builtin.systemd:
+    name: firewalld
+    state: restarted
