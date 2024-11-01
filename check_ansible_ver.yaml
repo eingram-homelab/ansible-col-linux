@@ -1,0 +1,12 @@
+---
+- name: Run first task
+  hosts: localhost
+  gather_facts: false
+  become: false
+
+  tasks:
+
+    - shell: ansible --version
+      register: ver
+
+    - debug: var=ver
