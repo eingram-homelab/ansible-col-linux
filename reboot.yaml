@@ -1,0 +1,9 @@
+---
+- name: Reboot linux host
+  hosts: "{{ hostvar }}"
+  become: true
+
+  tasks:
+  
+    - name: Reboot host
+      ansible.builtin.command: /sbin/shutdown -r +1 {{ tower_job_id }}
