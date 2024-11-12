@@ -6,4 +6,4 @@
   tasks:
   
     - name: Reboot host
-      ansible.builtin.command: /sbin/shutdown -r +1 {{ tower_job_id }}
+      ansible.builtin.command: /sbin/shutdown -r +1 {{ ansible_play_name }}
