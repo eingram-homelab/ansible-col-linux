@@ -1,0 +1,10 @@
+---
+- name: Install {{ item }}
+  ansible.builtin.package:
+    name: "{{ item }}"
+    state: present
+  loop:
+    - procmail
+    - mailx
+    - sendmail
+    - sendmail-cf
