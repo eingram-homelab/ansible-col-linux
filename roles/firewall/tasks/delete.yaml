@@ -1,0 +1,14 @@
+- name: Delete firewall rules
+  ansible.posix.firewalld:
+    port: "{{ fw_port_item }}"
+    zone: public
+    permanent: true
+    state: disabled
+  loop: "{{ fw_port }}"
+  loop_control:
+    loop_var: fw_port_item
+
+- name: Restart firewall
+  ansible.builtin.systemd:
+    name: firewalld
+    state: restarted
