@@ -1,11 +1,11 @@
 ---
 - name: Install firewalld if needed
-  ansible.builtin.package: 
+  ansible.builtin.package:
     name: firewalld
     state: present
 
-- name: start firewalld
-  ansible.builtin.service: 
+- name: Start firewalld
+  ansible.builtin.service:
     name: firewalld
     state: started
     enabled: true
@@ -15,6 +15,7 @@
     port: "{{ fw_port_item }}"
     zone: public
     permanent: true
+    immediate: true
     state: enabled
   loop: "{{ fw_port }}"
   loop_control:
@@ -22,7 +23,7 @@
   # notify:
   #   - Restart firewall
 
-- name: Restart firewall
-  ansible.builtin.systemd:
-    name: firewalld
-    state: restarted
+# - name: Restart firewall
+#   ansible.builtin.systemd:
+#     name: firewalld
+#     state: restarted
