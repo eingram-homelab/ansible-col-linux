@@ -1,0 +1,50 @@
+---
+- name: Run site baseline plays
+  hosts: "{{ hostvar | default([]) }}"
+  gather_facts: true
+  become: true
+  become_method: sudo
+
+  tasks:
+
+    - name: Add linux user
+      ansible.builtin.include_role:
+        name: eingram23.linux.add_user
+      vars:
+        user_id: "{{ item }}"
+      loop:
+        - ansible
+        - eingram
+      loop_control:
+        loop_var: item
+
+    - name: Set up chrony
+      ansible.builtin.include_role:
+        name: eingram23.linux.chrony
+
+    - name: Install core packages
+      ansible.builtin.include_role:
+        name: eingram23.linux.install_core_pkgs
+
+    - name: Install container engine
+      ansible.builtin.include_role:
+        name: eingram23.linux.container_host
+      when: "'container_host' in task"
+
+    - name: Setup zfs
+      ansible.builtin.include_role:
+        name: eingram23.linux.filesystem
+        tasks_from: zfs
+      when: "'zfs' in task"
+
+    - name: Setup nfs
+      ansible.builtin.include_role:
+        name: eingram23.linux.filesystem
+        tasks_from: nfs
+      when: "'nfs' in task"
+
+    - name: Setup samba
+      ansible.builtin.include_role:
+        name: eingram23.linux.filesystem
+        tasks_from: samba
+      when: "'samba' in task"

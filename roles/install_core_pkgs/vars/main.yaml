@@ -1,0 +1,31 @@
+ubuntu_packages:
+  - python3
+  - python3-pip
+  - zip
+  - git
+  - dnsutils
+  - perl
+  - wget
+  - curl
+  - vim
+  - netcat
+  - net-tools
+  - htop
+  - iotop
+
+rocky_rhel_packages:
+  - epel-release
+  - htop
+  - iotop
+  - python3
+  - yum-utils
+  - dnf-utils
+  - zip
+  - git
+  - bind-utils
+  - perl
+  - wget
+  - curl
+  - vim
+  - nc
+  - net-tools

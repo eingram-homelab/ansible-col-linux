@@ -1,0 +1,38 @@
+---
+- name: Create user - {{ user_id }}
+  ansible.builtin.user:
+    name: "{{ user_id }}"
+    password: "{{ user_password | password_hash('sha512') }}"
+  no_log: true
+
+- name: Make sure we have a 'wheel' group
+  ansible.builtin.group:
+    name: wheel
+    state: present
+
+- name: Allow 'wheel' group to have passwordless sudo
+  ansible.builtin.lineinfile:
+    dest: /etc/sudoers
+    state: present
+    regexp: '^%wheel'
+    line: '%wheel ALL=(ALL) NOPASSWD: ALL'
+    validate: 'visudo -cf %s'
+
+- name: Set admin user
+  when: admin_user == "yes"
+  block:
+    - name: Add sudoers users to wheel group
+      ansible.builtin.user:
+        name: "{{ user_id }}"
+        groups: wheel
+        append: true
+        state: present
+        createhome: true
+
+    - name: Set up authorized keys for the deployer user
+      ansible.posix.authorized_key:
+        user: "{{ user_id }}"
+        key: "{{ item }}"
+      with_template:
+        - id_rsa.pub.j2
+
