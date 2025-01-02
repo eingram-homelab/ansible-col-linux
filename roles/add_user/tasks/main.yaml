@@ -30,9 +30,12 @@
         createhome: true
 
     - name: Set up authorized keys for the deployer user
+      when: user_id == "ansible" or user_id == "eingram"
       ansible.posix.authorized_key:
         user: "{{ user_id }}"
-        key: "{{ item }}"
+        key: "{{ key_item }}"
+        state: present
       with_template:
         - id_rsa.pub.j2
-
+      loop_control:
+        loop_var: key_item
