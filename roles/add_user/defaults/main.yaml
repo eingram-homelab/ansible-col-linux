@@ -1,0 +1,2 @@
+---
+user_password: "{{ lookup('hashi_vault', 'secret/ssh/eingram:ssh_password') }}"
