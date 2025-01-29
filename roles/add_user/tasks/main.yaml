@@ -1,4 +1,12 @@
 ---
+- name: Assert vars are set
+  ansible.builtin.assert:
+    that:
+      - user_id is defined
+      - user_password is defined
+      - admin_user is defined
+    fail_msg: "user_id, user_password, and admin_user are required"
+
 - name: Create user - {{ user_id }}
   ansible.builtin.user:
     name: "{{ user_id }}"

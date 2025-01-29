@@ -1,0 +1,69 @@
+- name: Check Ubuntu/Debian hosts
+  ansible.builtin.include_role:
+    name: eingram23.linux.linux_update
+    tasks_from: check_deb_ub
+  when: ansible_distribution != 'CentOS' and
+        ansible_distribution != 'RedHat' and
+        ansible_distribution != 'Rocky' and
+        check == "yes"
+
+- name: Check CentOS/Rocky/RHEL hosts
+  ansible.builtin.include_role:
+    name: eingram23.linux.linux_update
+    tasks_from: check_redhat
+  when: (ansible_distribution == 'RedHat' or
+        ansible_distribution == 'CentOS' or
+        ansible_distribution == 'Rocky') and
+        check == "yes"
+
+- name: Update Ubuntu/Debian hosts
+  ansible.builtin.include_role:
+    name: eingram23.linux.linux_update
+    tasks_from: update_deb_ub
+  when: ansible_distribution != 'CentOS' and
+        ansible_distribution != 'RedHat' and
+        ansible_distribution != 'Rocky' and
+        check_reboot == "no" and
+        install == "yes"
+
+- name: Update CentOS hosts
+  ansible.builtin.include_role:
+    name: eingram23.linux.linux_update
+    tasks_from: update_centos
+  when: ansible_distribution == 'CentOS' and
+        check_reboot == "no" and
+        install == "yes"
+
+- name: Update Rocky/RHEL hosts
+  ansible.builtin.include_role:
+    name: eingram23.linux.linux_update
+    tasks_from: update_redhat
+  when: (ansible_distribution == 'RedHat' or
+        ansible_distribution == 'Rocky') and
+        check_reboot == "no" and
+        install == "yes"
+
+- name: Check if reboot required
+  ansible.builtin.include_role:
+    name: eingram23.linux.linux_update
+    tasks_from: checkreboot
+  when: check_reboot == "yes"
+
+- name: Write update data to postgres
+  community.postgresql.postgresql_query:
+    connect_params:
+      target_session_attrs: read-write
+      connect_timeout: 10
+    login_host: "homenas.local.lan"
+    port: 5432
+    login_user: "homelab_cmdb"
+    login_password: "{{ lookup('hashi_vault', 'secret=secret/ssh/eingram:ssh_password') }}"
+    db: homelab_cmdb
+    query: >
+      INSERT INTO servers (server_name, os, hardware_type, env, server_fqdn, ip_address, os_family)
+      VALUES ( '{{ inventory_hostname_short }}', '{{ ansible_distribution }} {{ ansible_distribution_version }}', '{{ ansible_bios_vendor }}', '{{ env }}', '{{ inventory_hostname }}', '{{ ansible_default_ipv4.address }}', '{{ ansible_os_family }}')
+      ON CONFLICT (server_name)
+      DO UPDATE SET os = '{{ ansible_distribution }} {{ ansible_distribution_version }}', hardware_type = '{{ ansible_bios_vendor }}', env = '{{ env }}', server_fqdn = '{{ inventory_hostname }}', ip_address = '{{ ansible_default_ipv4.address }}', os_family = '{{ ansible_os_family }}';
+  when: update_db == "yes"
+  delegate_to: localhost
+  become: false

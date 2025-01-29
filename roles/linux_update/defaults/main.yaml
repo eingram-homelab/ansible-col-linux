@@ -1,0 +1,6 @@
+---
+check_reboot: "no"
+check: "yes"
+reboot: "no"
+update_db: "yes"
+install: "no"
