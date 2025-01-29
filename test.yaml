@@ -1,0 +1,13 @@
+---
+- hosts: podhost-dev.local.lan
+  gather_facts: false
+  become: true
+
+  tasks:
+    - dnf:
+        list: updates
+      register: packages
+
+    - name: Show packages to upgrade
+      debug:
+        var: packages
