@@ -1,0 +1,11 @@
+---
+- name: Check if port is available
+  hosts: "{{ hostvar | default([]) }}"
+  gather_facts: false
+  become: false
+
+  tasks:
+
+    - include_role:
+        name: eingram23.linux.network
+        tasks_from: check_open_port

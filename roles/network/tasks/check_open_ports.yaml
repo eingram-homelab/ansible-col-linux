@@ -1,0 +1,19 @@
+---
+- name: Gather facts on listening ports
+  community.general.listen_ports_facts:
+
+- name: Create list of listening ports
+  ansible.builtin.set_fact:
+    listening_ports: "{{ ansible_facts.tcp_listen + ansible_facts.udp_listen }}"
+
+- name: Combine port and protocol
+  ansible.builtin.set_fact:
+    listening_ports_list: "{{ listening_ports_list | default([]) + [(listen_item.port | string) + '/' + (listen_item.protocol | string)] }}"
+  loop: "{{ listening_ports }}"
+  loop_control:
+    loop_var: listen_item
+
+- name: Fail if fw_port is in listening_ports_list
+  when: listening_ports_list | intersect(fw_port) | length > 0
+  ansible.builtin.fail:
+    msg: "Port(s) {{ listening_ports_list | intersect(fw_port) }} are already in use."
