@@ -1,12 +1,22 @@
 ---
-# Run with -kK and -e "ansible_user= " to create initial user
+# Run with -kK and -e "ansible_user=root" to create initial user
 - name: Add linux user
   hosts: "{{ hostvar | default([]) }}"
   gather_facts: false
   become: true
   become_method: sudo
-    
+
   tasks:
 
-    - ansible.builtin.import_role:
-        name: eingram23.linux.add_user
+    - name: Assert vars are set
+      ansible.builtin.assert:
+        that:
+          - user_id is defined
+          - user_password is defined
+          - admin_user is defined
+        fail_msg: "user_id, user_password, and admin_user are required"
+
+    - name: Add user - {{ user_id }}
+      ansible.builtin.import_role:
+        name: eingram23.linux.user_mgmt
+        tasks_from: add_user.yaml
