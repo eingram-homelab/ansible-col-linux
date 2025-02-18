@@ -1,0 +1,11 @@
+---
+- name: Create root.ca on host server
+  ansible.builtin.template:
+    src: homelab_root.crt.j2
+    dest: "{{ '/usr/local/share/ca-certificates/homelab_root.crt' if ansible_os_family == 'Debian'
+           else '/etc/pki/ca-trust/source/anchors/homelab_root.crt' if ansible_os_family == 'RedHat'
+           }}"
+    owner: root
+    group: root
+    mode: '0644'
+  notify: Update ca-certificates

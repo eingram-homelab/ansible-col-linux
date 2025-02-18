@@ -1,0 +1,9 @@
+---
+- name: Update ca-certificates
+  become: true
+  become_method: sudo
+  become_user: root
+  ansible.builtin.command: "{{ 'update-ca-certificates' if ansible_os_family == 'Debian'
+                            else 'update-ca-trust' if ansible_os_family == 'RedHat'
+                            }}"
+  changed_when: false

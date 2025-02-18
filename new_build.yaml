@@ -1,5 +1,5 @@
 ---
-- name: Run site baseline plays
+- name: Setup new linux server for Homelab environment
   hosts: "{{ hostvar | default([]) }}"
   gather_facts: true
   become: true
@@ -9,7 +9,8 @@
 
     - name: Add linux user
       ansible.builtin.include_role:
-        name: eingram23.linux.add_user
+        name: eingram23.linux.user_mgmt
+        tasks_from: add_user
       vars:
         user_id: "{{ user_item }}"
         user_password: "{{ lookup('hashi_vault', 'secret=secret/ssh/ansible:ssh_password') }}"
@@ -27,6 +28,10 @@
     - name: Install core packages
       ansible.builtin.include_role:
         name: eingram23.linux.install_core_pkgs
+
+    - name: Install root certificate into trusted store
+      ansible.builtin.include_role:
+        name: eingram23.linux.certificates
 
     - name: Run additional tasks
       when: task is defined
