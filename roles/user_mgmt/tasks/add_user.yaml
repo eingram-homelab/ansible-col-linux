@@ -2,7 +2,7 @@
 - name: Create user - {{ user_id }}
   ansible.builtin.user:
     name: "{{ user_id }}"
-    # password: "{{ user_password | password_hash('sha512') }}"
+    password: "{{ 'testtestest' | password_hash('sha512') }}"
   # no_log: true
 
 - name: Make sure we have a 'wheel' group
