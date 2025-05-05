@@ -12,6 +12,7 @@ ubuntu_packages:
 - net-tools
 - htop
 - iotop
+- iftop
 - ca-certificates
 
 rocky_rhel_packages:
@@ -31,3 +32,5 @@ rocky_rhel_packages:
 - nc
 - net-tools
 - ca-certificates
+- iftop
+- dstat
