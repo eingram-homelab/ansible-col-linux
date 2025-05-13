@@ -4,11 +4,11 @@ ubuntu_packages:
 - zip
 - git
 - dnsutils
+- iputils-ping
 - perl
 - wget
 - curl
 - vim
-- netcat
 - net-tools
 - htop
 - iotop
