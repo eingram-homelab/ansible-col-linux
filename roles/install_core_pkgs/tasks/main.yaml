@@ -1,24 +1,54 @@
 ---
-- name: Install rocky/rhel packages
+- name: Update package repositories
+  ansible.builtin.package_facts:
+    manager: auto
+
+# Rocky/RHEL specific tasks
+- name: Perform Rocky/RHEL specific tasks
   when: ansible_facts['distribution'] in ['Rocky', 'RedHat']
-  ansible.builtin.package:
-    name: "{{ core_pkg_item_rocky_rhel }}"
-    state: present
-  loop: "{{ rocky_rhel_packages }}"
-  loop_control:
-    loop_var: core_pkg_item_rocky_rhel
+  block:
+    - name: Update repository cache
+      ansible.builtin.dnf:
+        update_cache: true
 
-- name: Install ubuntu packages
-  when: ansible_facts['distribution'] == 'Ubuntu'
-  ansible.builtin.package:
-    name: "{{ core_pkg_item_ubuntu }}"
-    state: present
-  loop: "{{ ubuntu_packages }}"
-  loop_control:
-    loop_var: core_pkg_item_ubuntu
+    - name: Upgrade all packages to latest version
+      ansible.builtin.dnf:
+        name: "*"
+        state: latest
 
-- name: Perform RHEL specific tasks
+    - name: Install rocky/rhel packages
+      ansible.builtin.package:
+        name: "{{ core_pkg_item_rocky_rhel }}"
+        state: present
+      loop: "{{ rocky_rhel_packages }}"
+      loop_control:
+        loop_var: core_pkg_item_rocky_rhel
+
+# RHEL-only specific tasks
+- name: Perform RHEL-only specific tasks
   when: ansible_facts['distribution'] == 'RedHat'
   block:
     - name: Update subscription manager
       ansible.builtin.shell: subscription-manager repos --enable codeready-builder-for-rhel-8-$(arch)-rpms
+
+# Ubuntu specific tasks
+- name: Perform Ubuntu specific tasks
+  when: ansible_facts['distribution'] == 'Ubuntu'
+  block:
+    - name: Update repository cache
+      ansible.builtin.apt:
+        update_cache: true
+
+    - name: Upgrade all packages to latest version
+      ansible.builtin.apt:
+        name: "*"
+        state: latest
+        upgrade: true
+
+    - name: Install ubuntu packages
+      ansible.builtin.package:
+        name: "{{ core_pkg_item_ubuntu }}"
+        state: present
+      loop: "{{ ubuntu_packages }}"
+      loop_control:
+        loop_var: core_pkg_item_ubuntu
