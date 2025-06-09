@@ -1,9 +1,9 @@
 ---
-- name: Create user - {{ user_id }}
+- name: Create user - {{ user_account }}
   ansible.builtin.user:
-    name: "{{ user_id }}"
+    name: "{{ user_account }}"
     password: "{{ user_password | password_hash('sha512') }}"
-  no_log: true
+  # no_log: true
 
 - name: Make sure we have a 'wheel' group
   ansible.builtin.group:
@@ -23,16 +23,16 @@
   block:
     - name: Add sudoers users to wheel group
       ansible.builtin.user:
-        name: "{{ user_id }}"
+        name: "{{ user_account }}"
         groups: wheel
         append: true
         state: present
         createhome: true
 
     - name: Set up authorized keys for the deployer user
-      when: user_id == "ansible" or user_id == "eingram"
+      when: user_account == "ansible" or user_account == "eingram"
       ansible.posix.authorized_key:
-        user: "{{ user_id }}"
+        user: "{{ user_account }}"
         key: "{{ key_item }}"
         state: present
       with_template:
