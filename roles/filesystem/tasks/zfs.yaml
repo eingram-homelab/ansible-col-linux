@@ -1,17 +1,22 @@
 ---
 - name: Install zfs-release to match kernel
   ansible.builtin.shell: |
-    dnf install https://zfsonlinux.org/epel/zfs-release-2-3$(rpm --eval "%{dist}").noarch.rpm
+    dnf install -y https://zfsonlinux.org/epel/zfs-release-2-8$(rpm --eval "%{dist}").noarch.rpm
 
-- name: Instal epel-release and usbutils
+- name: Install usbutils
   ansible.builtin.dnf:
     name: "{{ package }}"
     state: present
   loop:
-    - epel-release
     - usbutils
   loop_control:
     loop_var: package
+
+- name: Install ZFS with kABI-tracking kmod
+  ansible.builtin.shell: |
+    dnf config-manager --disable zfs
+    dnf config-manager --enable zfs-kmod
+    dnf -y install zfs
 
 - name: Run SuperMicro specific tasks
   when: ansible_product_name == "X9SCL/X9SCM"
@@ -32,24 +37,14 @@
         name: mpt3sas
         state: present
 
-  ansible.builtin.dnf:
-    name: "{{ sm_package }}"
-    state: present
-  loop:
-    - pci-utils
-    - kmod-mpt3sas
-    - elrepo-release
-  loop_control:
-    loop_var: sm_package
-
-- name: Disable ZFS repo, enable ZFS-KMOD and install ZFS
-  ansible.builtin.dnf:
-    disablerepo:
-      - zfs
-    enablerepo:
-      - zfs-kmod
-    name: zfs
-    state: present
+# - name: Disable ZFS repo, enable ZFS-KMOD and install ZFS
+#   ansible.builtin.dnf:
+#     disablerepo:
+#       - zfs
+#     enablerepo:
+#       - zfs-kmod
+#     name: zfs
+#     state: present
 
 - name: Enable ZFS module
   community.general.modprobe:

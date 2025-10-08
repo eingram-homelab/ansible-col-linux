@@ -47,8 +47,8 @@
     setype: samba_share_t
     state: present
 
-- name: Apply new SELinux file context to filesystem
-  ansible.builtin.command: restorecon -R /mnt/pool0
+# - name: Apply new SELinux file context to filesystem
+#   ansible.builtin.command: restorecon -R /mnt/pool0
 
 - name: Add smb.conf
   ansible.builtin.copy:
@@ -58,12 +58,12 @@
     mode: '0644'
   notify: Reload smb
 
-- name: Set perms for /mnt/pool0/Shared
-  ansible.builtin.file:
-    path: /mnt/pool0/Shared
-    owner: shareaccess
-    group: shareaccess
-    recurse: true
+# - name: Set perms for /mnt/pool0/Shared
+#   ansible.builtin.file:
+#     path: /mnt/pool0/Shared
+#     owner: shareaccess
+#     group: shareaccess
+#     recurse: true
 
 - name: Set smbpasswd for shareaccess
   ansible.builtin.shell: >
@@ -76,4 +76,4 @@
     executable: /bin/bash
   register: samba_create_users
   changed_when: "'Added user' in samba_create_users.stdout"
-  no_log: true
+  # no_log: true

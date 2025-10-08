@@ -1,0 +1,26 @@
+---
+- name: Install filesystem support on Linux servers
+  hosts: "{{ hostvar | default([]) }}"
+  gather_facts: true
+  become: true
+  become_method: sudo
+
+  tasks:
+    
+    - name: Assert at least one filesystem is defined
+      ansible.builtin.assert:
+        that:
+          - fs is defined
+          - fs | length > 0
+          - fs | difference(['samba', 'nfs', 'zfs']) | length == 0
+        fail_msg: "The 'fs' variable must be defined as a list with valid values from: samba, nfs, zfs."
+        success_msg: "The 'fs' variable is defined and contains valid filesystem types."
+
+    - name: Include filesystem role
+      ansible.builtin.include_role:
+        name: "eingram23.linux.filesystem"
+        tasks_from: "{{ fs_item }}"
+      loop: "{{ fs | list }}"
+      loop_control:
+        loop_var: fs_item
+        label: "Running filesystem setup for {{ fs_item }}"
