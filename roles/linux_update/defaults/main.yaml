@@ -2,5 +2,5 @@
 check_reboot: "no"
 check: "yes"
 reboot: "no"
-update_db: "yes"
+update_db: "no"
 install: "no"

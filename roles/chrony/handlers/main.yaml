@@ -5,4 +5,5 @@
     state: restarted
 
 - name: Sync hwclock
+  when: "'dietpi' not in group_names"
   ansible.builtin.shell: hwclock -w

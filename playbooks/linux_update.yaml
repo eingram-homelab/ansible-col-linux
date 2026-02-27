@@ -1,12 +1,32 @@
 ---
+# Playbook: Update software/kernel packages across Linux hosts
+# Purpose: Validate required extra vars, then run update role.
+#
+# Required extra vars:
+# - hostvar: inventory group or host pattern to target.
+#
+# Defaults:
+# - check: 'yes' (validate available updates)
+# - install: 'no' (do not install updates)
+# - check_reboot: 'no' (do not check for reboot requirement)
+# - update_db: 'no' (do not update CMDB)
+# - env: '' (environment name, required if update_db == 'yes')
+#
+# Examples:
+# - Validate only:
+#   ansible-playbook linux_update.yaml -e 'hostvar=all check=yes install=no check_reboot=no update_db=no'
+# - Update packages:
+#   ansible-playbook linux_update.yaml -e 'hostvar=webservers check=no install=yes check_reboot=no update_db=no'
+# - Update and write to CMDB:
+#   ansible-playbook linux_update.yaml -e 'hostvar=webservers check=no install=yes check_reboot=no update_db=yes env=prod'
+
 - name: Update software/kernel packages
   hosts: "{{ hostvar|default([]) }}"
   gather_facts: true
   become: true
-  become_method: sudo
+  become_method: ansible.builtin.sudo
 
   tasks:
-  
     - name: Run main tasks
       ansible.builtin.import_role:
         name: eingram23.linux.linux_update

@@ -23,6 +23,7 @@
     - Sync hwclock
 
 - name: Set timezone to America/Los_Angeles
+  when: "'dietpi' not in group_names"
   community.general.timezone:
     name: America/Los_Angeles
   notify: 
