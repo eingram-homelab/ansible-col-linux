@@ -12,7 +12,10 @@
   ansible.builtin.user:
     name: "{{ user_account }}"
     password: "{{ user_password | password_hash('sha512') }}"
-  no_log: true
+    shell: /bin/bash
+    state: present
+    createhome: true
+  # no_log: true
 
 - name: Make sure we have a 'wheel' group
   ansible.builtin.group:
