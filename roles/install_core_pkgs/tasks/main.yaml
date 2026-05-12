@@ -11,11 +11,6 @@
       ansible.builtin.dnf:
         update_cache: true
 
-    - name: Upgrade all packages to latest version
-      ansible.builtin.dnf:
-        name: "*"
-        state: latest
-
     - name: Install rocky/rhel packages
       ansible.builtin.package:
         name: "{{ core_pkg_item_rocky_rhel }}"
@@ -39,12 +34,6 @@
       ansible.builtin.apt:
         update_cache: true
 
-    - name: Upgrade all packages to latest version
-      ansible.builtin.apt:
-        name: "*"
-        state: latest
-        upgrade: true
-
     - name: Install ubuntu packages
       ansible.builtin.package:
         name: "{{ core_pkg_item_ubuntu }}"
@@ -52,3 +41,19 @@
       loop: "{{ ubuntu_packages }}"
       loop_control:
         loop_var: core_pkg_item_ubuntu
+
+# Proxmox specific tasks
+- name: Perform Proxmox specific tasks
+  when: "'proxmox' in group_names"
+  block:
+    - name: Update repository cache
+      ansible.builtin.apt:
+        update_cache: true
+
+    - name: Install proxmox packages
+      ansible.builtin.package:
+        name: "{{ core_pkg_item_proxmox }}"
+        state: present
+      loop: "{{ proxmox_packages }}"
+      loop_control:
+        loop_var: core_pkg_item_proxmox

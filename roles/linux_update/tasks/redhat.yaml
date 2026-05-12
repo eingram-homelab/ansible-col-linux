@@ -1,0 +1,39 @@
+---
+- name: Upgrade RHEL system
+  when: ansible_facts['os_family'] == 'RedHat'
+  block:
+    - name: Update dnf cache
+      ansible.builtin.dnf:
+        update_cache: true
+
+    - name: Upgrade all packages to latest version
+      ansible.builtin.dnf:
+        name: "*"
+        state: latest
+
+    - name: Check if reboot required
+      ansible.builtin.command: needs-restarting -r
+      register: reboot_required
+      ignore_errors: true
+      failed_when: false
+
+    - name: Report if reboot required
+      ansible.builtin.debug:
+        msg: "Reboot required"
+      when: reboot_required.rc != 0
+
+    - name: Reboot server
+      ansible.builtin.reboot:
+        reboot_timeout: 600
+      when:
+        - reboot_required.rc != 0
+        - linux_update_reboot | default(false) | bool
+
+    - name: Report on updated packages
+      ansible.builtin.shell: dnf history info last
+      register: dnf_history
+      changed_when: false
+
+    - name: Show updated packages
+      ansible.builtin.debug:
+        var: dnf_history.stdout_lines

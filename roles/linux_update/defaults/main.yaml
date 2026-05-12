@@ -1,6 +1,2 @@
 ---
-check_reboot: "no"
-check: "yes"
-reboot: "no"
-update_db: "no"
-install: "no"
+linux_update_reboot: false
