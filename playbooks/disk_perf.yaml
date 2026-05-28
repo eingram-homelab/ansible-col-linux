@@ -1,0 +1,144 @@
+---
+- name: Run disk performance tests
+  hosts: "{{ hostvar | default([]) }}"
+  become: false
+  gather_facts: false
+
+  tasks:
+
+    - name: Install fio if not available
+      ansible.builtin.package:
+        name: fio
+        state: present
+      become: true
+      become_method: ansible.builtin.sudo
+
+    - name: Run disk performance test (write)
+      ansible.builtin.command: |
+        fio --name=write-test \
+        --filename=/var/tmp/testfile \
+        --size=4G \
+        --bs=1M \
+        --rw=write \
+        --iodepth=32 \
+        --direct=1 \
+        --ioengine=libaio \
+        --runtime=60 \
+        --time_based \
+        --group_reporting \
+        --output-format=json
+      register: fio_write_result
+      ignore_errors: true
+
+    - name: Run disk performance test (read)
+      when: fio_write_result.rc == 0
+      ansible.builtin.command: |
+        fio --name=read-test \
+        --filename=/var/tmp/testfile \
+        --size=4G \
+        --bs=1M \
+        --rw=read \
+        --iodepth=32 \
+        --direct=1 \
+        --ioengine=libaio \
+        --runtime=60 \
+        --time_based \
+        --group_reporting \
+        --output-format=json
+      register: fio_read_result
+      ignore_errors: true
+
+    - name: Run disk performance test (randwrite)
+      ansible.builtin.command: |
+        fio --name=randwrite-test \
+        --filename=/var/tmp/testfile \
+        --size=4G \
+        --bs=4K \
+        --rw=randwrite \
+        --iodepth=32 \
+        --direct=1 \
+        --ioengine=libaio \
+        --runtime=60 \
+        --time_based \
+        --group_reporting \
+        --output-format=json
+      register: fio_randwrite_result
+      ignore_errors: true
+
+    - name: Run disk performance test (randread)
+      ansible.builtin.command: |
+        fio --name=randread-test \
+        --filename=/var/tmp/testfile \
+        --size=4G \
+        --bs=4K \
+        --rw=randread \
+        --iodepth=32 \
+        --direct=1 \
+        --ioengine=libaio \
+        --runtime=60 \
+        --time_based \
+        --group_reporting \
+        --output-format=json
+      register: fio_randread_result
+      ignore_errors: true
+
+    - name: Build fio result map
+      ansible.builtin.set_fact:
+        fio_results:
+          write: "{{ fio_write_result }}"
+          read: "{{ fio_read_result }}"
+          randwrite: "{{ fio_randwrite_result }}"
+          randread: "{{ fio_randread_result }}"
+
+    - name: Parse successful fio JSON outputs
+      when:
+        - fio_results[fio_item] is defined
+        - (fio_results[fio_item].rc | default(1)) == 0
+      ansible.builtin.set_fact:
+        fio_json_results: "{{ fio_json_results | default({}) | combine({ fio_item: (fio_results[fio_item].stdout | from_json) }) }}"
+      loop:
+        - write
+        - read
+        - randwrite
+        - randread
+      loop_control:
+        loop_var: fio_item
+
+    - name: Clean up test file
+      ansible.builtin.file:
+        path: /var/tmp/testfile
+        state: absent
+
+    - name: Display disk performance test summaries
+      when: fio_json_results is defined
+      loop: "{{ fio_json_results | dict2items }}"
+      loop_control:
+        label: "{{ item.key }}"
+      vars:
+        io_key: "{{ 'read' if 'read' in item.key else 'write' }}"
+      ansible.builtin.debug:
+        msg:
+          summary: "fio {{ item.key }} summary"
+          host: "{{ inventory_hostname }}"
+          bw_mib_s: "{{ (item.value.jobs[0][io_key].bw | float / 1024) | round(2) }}"
+          iops: "{{ (item.value.jobs[0][io_key].iops | float) | round(2) }}"
+          avg_clat_ms: "{{ (item.value.jobs[0][io_key].clat_ns.mean | float / 1000000) | round(2) }}"
+          p99_clat_ms: "{{ (item.value.jobs[0][io_key].clat_ns.percentile['99.000000'] | float / 1000000) | round(2) }}"
+          runtime_s: "{{ (item.value.jobs[0].job_runtime | float / 1000) | round(2) }}"
+          io_mib: "{{ (item.value.jobs[0][io_key].io_kbytes | float / 1024) | round(2) }}"
+          max_disk_util_pct: "{{ (item.value.disk_util | map(attribute='util') | list | max) | round(2) if (item.value.disk_util | length > 0) else 'n/a' }}"
+          disk_devices: "{{ (item.value.disk_util | map(attribute='name') | list | join(', ')) if (item.value.disk_util | length > 0) else 'n/a' }}"
+
+    - name: Display fio errors for failed tests
+      when:
+        - fio_results[fio_item] is defined
+        - (fio_results[fio_item].rc | default(1)) != 0
+      loop:
+        - write
+        - read
+        - randwrite
+        - randread
+      loop_control:
+        loop_var: fio_item
+      ansible.builtin.debug:
+        msg: "fio {{ fio_item }} failed (rc={{ fio_results[fio_item].rc | default('unknown') }}): {{ fio_results[fio_item].stderr | default('no stderr') }}"
