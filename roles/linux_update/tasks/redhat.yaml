@@ -5,22 +5,22 @@
     - name: Run tasks for RHEL8 or lower
       when: ansible_facts['distribution_major_version'] | int <= 8
       block:
-        - name: Update dnf cache
+        - name: Update dnf cache (RHEL8 or lower)
           ansible.builtin.command: dnf makecache
           changed_when: true
 
-        - name: Upgrade all packages to latest version
+        - name: Upgrade all packages to latest version (RHEL8 or lower)
           ansible.builtin.command: dnf -y upgrade
           changed_when: true
 
     - name: Run tasks for RHEL9 or higher
       when: ansible_facts['distribution_major_version'] | int >= 9
       block:
-        - name: Update dnf cache
+        - name: Update dnf cache (RHEL9 or higher)
           ansible.builtin.dnf:
             update_cache: true
 
-        - name: Upgrade all packages to latest version
+        - name: Upgrade all packages to latest version (RHEL9 or higher)
           ansible.builtin.dnf:
             name: "*"
             state: latest
