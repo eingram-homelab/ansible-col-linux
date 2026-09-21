@@ -19,6 +19,7 @@ ubuntu_packages:
 rocky_rhel_packages:
   - epel-release
   - htop
+  - btop
   - iotop
   - python3
   - yum-utils
